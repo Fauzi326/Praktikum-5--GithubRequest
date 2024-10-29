@@ -46,8 +46,7 @@ class MainActivity : AppCompatActivity() {
                             val blog = userObject.getString("blog")
                             val bio = userObject.getString("bio")
                             val company = userObject.getString("company")
-                            binding.tvUserInfo.text =
-                                "${id}\n${name}\n${url}\n${blog}\n${bio}\n${company}"
+                            binding.tvUserInfo.text = "${id}\n${name}\n${url}\n${blog}\n${bio}\n${company}"
                         }
                     } catch (e: JSONException) {
                         e.printStackTrace()
