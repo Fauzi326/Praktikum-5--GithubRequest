@@ -1,20 +1,67 @@
 package muhammadfauzi.polbeng.ac.id.githubrequest
 
-import android.os.Bundle
-import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
+import android.os.Bundle
+import android.widget.Toast
+import okhttp3.Call
+import okhttp3.Callback
+import okhttp3.OkHttpClient
+import okhttp3.Response
+import org.json.JSONException
+import org.json.JSONObject
+import java.io.IOException
+import muhammadfauzi.polbeng.ac.id.githubrequest.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
+    private lateinit var binding: ActivityMainBinding
+    private val client = OkHttpClient()
+    private val request = OkHttpRequest(client)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-        setContentView(R.layout.activity_main)
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        binding.btnGetInfo.setOnClickListener {
+            val loginID = binding.tvSearch.text.toString()
+            if(loginID.isEmpty()){
+                Toast.makeText(applicationContext, "Silah masukan login id akun github Anda!", Toast.LENGTH_SHORT).show()
+            }else{
+                val url = "https://api.github.com/users/$loginID"
+                fetchGitHubInfo(url)
+            }
         }
+    }
+    private fun fetchGitHubInfo(strURL: String) {
+        request.GET(strURL, object: Callback {
+            override fun onResponse(call: Call, response: Response) {
+                val responseData = response.body?.string()
+                println("Request Successful!!")
+                println(responseData)
+                runOnUiThread{
+                    try {
+                        if(responseData != null){
+                            val userObject = JSONObject(responseData)
+                            val id = userObject.getString("id")
+                            val name = userObject.getString("name")
+                            val url = userObject.getString("url")
+                            val blog = userObject.getString("blog")
+                            val bio = userObject.getString("bio")
+                            val company = userObject.getString("company")
+                            binding.tvUserInfo.text =
+                                "${id}\n${name}\n${url}\n${blog}\n${bio}\n${company}"
+                        }
+                    } catch (e: JSONException) {
+                        e.printStackTrace()
+                    }
+                }
+            }
+            override fun onFailure(call: Call, e: IOException) {
+                println("Request Failure.")
+            }
+        })
+    }
+    override fun onResume() {
+        super.onResume()
+        binding.tvSearch.setText("")
+        binding.tvSearch.hint = "Enter GitHub username"
     }
 }
